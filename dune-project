@@ -19,7 +19,7 @@
  (name ocaml_rest)
  (synopsis "OCaml reStructuredText parser")
  (description "Angstrom-based ReST parser")
- (depends ocaml dune)
+ (depends ocaml dune angstrom)
  (tags
   (topics "to describe" your project)))
 

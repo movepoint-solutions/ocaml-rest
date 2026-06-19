@@ -1,2 +1,3 @@
 (test
- (name ocaml_rest))
+ (name ocaml_rest_test)
+ (libraries ocaml_rest ounit2))
