@@ -1,5 +1,10 @@
-type rest =
-        | Para of string
-        | Markup of string
+type markup =
+        | Text of string
+        | Em of string
+        | Strong of string
+        | Interp of string
 
-let parse s = Para s
+type rest =
+        | Para of markup list
+
+let parse s = Para [Text s]
