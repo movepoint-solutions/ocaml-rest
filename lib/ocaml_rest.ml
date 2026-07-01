@@ -9,17 +9,19 @@ type rest =
 
 open Angstrom
 
-let text (p : string t) = lift (fun cnt -> Text cnt) p
-let em (p : string t) = char '*' *> lift (fun cnt -> Em cnt) p <* char '*'
-let strong (p : string t) = string "**" *> lift (fun cnt -> Strong cnt) p <* string "**"
-let para (p : markup list t) = lift (fun cnt -> Para cnt) p
-let nonspaces : string t = take_while1 (function | ' ' | '\t' -> false | _ -> true)
-let spaces : string t = take_while1 (function | ' ' | '\t' -> true | _ -> false)
+let text (p : string t) = p |> map ~f:(fun cnt -> Text cnt) 
+let em (p : string t) = char '*' *> p <* char '*' |> map ~f:(fun cnt -> Em cnt)
+let strong (p : string t) = string "**" *> p <* string "**" |> map ~f:(fun cnt -> Strong cnt)
+let para (p : markup list t) = lift (fun cnt -> Para cnt) p <?> "para"
+let nonspaces : string t = take_while (function | ' ' | '\t' -> false | _ -> true) <?> "nonspaces"
+let nonspace : char t = satisfy (function | ' ' | '\t' -> false | _ -> true) <?> "nonspace"
+let plain_nonspace : char t = satisfy (function | '_' | '*' | ' ' | '\t' -> false | _ -> true) <?> "nonspace"
+(*let spaces : string t = take_while1 (function | ' ' | '\t' -> true | _ -> false)*)
 (*let any_string : string t = lift (fun l -> String.of_seq (List.to_seq l)) (many any_char)*)
-let plain_string : string t = take_while1 (function | '_' | '*' -> false | _ -> true)
-(*let markupable : string t = lift3 (fun n1 a n2 -> n1 ^ a ^ n2) nonspaces plain_string nonspaces*)
-let markupable = plain_string
-let contents = many (text plain_string <|> em markupable <|> strong markupable)
+let plain_string : string t = take_while1 (function | '_' | '*' -> false | _ -> true) <?> "plain_string"
+(*let markupable : string t = lift2 (fun n1 a -> (String.make 1 n1) ^ a) plain_nonspace (option "" (lift (fun (s, c) -> s ^ (String.make 1 c)) (both plain_string plain_nonspace))) <?> "markupable"*)
+let markupable = many1 plain_nonspace |> lift (fun l -> String.of_seq (List.to_seq l)) <?> "markupable"
+let contents = many (text markupable <|> em markupable <|> strong markupable)
 let parse (str:string) : rest =
   match parse_string ~consume:All (para contents) str with
   | Ok v      -> v
